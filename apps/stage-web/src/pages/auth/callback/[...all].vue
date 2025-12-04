@@ -1,13 +1,21 @@
 <script setup lang="ts">
 import { createAuthClient } from 'better-auth/client'
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { toast } from 'vue-sonner'
 
 const route = useRoute()
 const response = ref()
 
+const state = computed(() => route.query.state as string)
+const code = computed(() => route.query.code as string)
+
 onMounted(async () => {
+  if (!state.value || !code.value) {
+    toast.error('Missing state or code')
+    return
+  }
+
   const authClient = createAuthClient({
     baseURL: import.meta.env.VITE_SERVER_URL || 'http://localhost:3000',
   })
@@ -15,8 +23,8 @@ onMounted(async () => {
   const { error, data } = await authClient.signIn.social({
     provider: 'google',
     idToken: {
-      token: route.query.state,
-      accessToken: route.query.code,
+      token: state.value,
+      accessToken: code.value,
     },
   })
 
