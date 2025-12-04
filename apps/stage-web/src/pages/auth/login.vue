@@ -1,19 +1,13 @@
 <script setup lang="ts">
 import { Button } from '@proj-airi/ui'
-import { createAuthClient } from 'better-auth/client'
-import { useRouter } from 'vue-router'
 import { toast } from 'vue-sonner'
 
-const router = useRouter()
+import { API_SERVER_URL, authClient } from '../../composables/auth'
 
 async function signIn() {
-  const authClient = createAuthClient({
-    baseURL: import.meta.env.VITE_SERVER_URL || 'http://localhost:3000',
-  })
-
   const { error, data } = await authClient.signIn.social({
     provider: 'google',
-    callbackURL: `${window.location.origin}/auth/callback/google`,
+    callbackURL: `${API_SERVER_URL}/api/auth/callback/google`,
   })
 
   if (error) {
@@ -21,7 +15,7 @@ async function signIn() {
   }
 
   if (data && data.redirect && data.url) {
-    router.push(data.url)
+    window.open(data.url, '_blank')
   }
 }
 </script>
