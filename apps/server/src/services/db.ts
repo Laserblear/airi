@@ -1,8 +1,9 @@
-import process from 'node:process'
-
 import postgres from 'postgres'
 
 import { drizzle } from 'drizzle-orm/postgres-js'
 
-const client = postgres(process.env.DATABASE_URL!)
-export const db = drizzle(client)
+export type Database = ReturnType<typeof createDrizzle>
+
+export function createDrizzle(dsn: string) {
+  return drizzle(postgres(dsn))
+}
