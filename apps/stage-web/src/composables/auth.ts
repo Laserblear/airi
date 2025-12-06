@@ -19,7 +19,7 @@ export const authClient = createAuthClient({
   },
   fetchOptions: {
     onSuccess: (ctx) => {
-      const newToken = ctx.response.headers.get('set-auth-token')
+      const newToken = ctx.response.headers.get('set-auth-jwt')
       if (newToken) {
         authStore.authToken = newToken
       }
