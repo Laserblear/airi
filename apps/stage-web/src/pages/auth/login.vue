@@ -2,14 +2,13 @@
 import { Button } from '@proj-airi/ui'
 import { toast } from 'vue-sonner'
 
-import { API_SERVER_URL, authClient } from '../../composables/auth'
+import { useAuthStore } from '../../stores/auth'
 
-async function signIn(type: 'google' | 'github') {
+const authStore = useAuthStore()
+
+async function signIn(provider: 'google' | 'github') {
   try {
-    await authClient.signIn.social({
-      provider: type,
-      callbackURL: `${API_SERVER_URL}/api/auth/callback/${type}`,
-    })
+    await authStore.signInSocial(provider)
   }
   catch (error) {
     toast.error(error instanceof Error ? error.message : 'An unknown error occurred')
