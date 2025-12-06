@@ -2,13 +2,14 @@
 import { Button } from '@proj-airi/ui'
 import { toast } from 'vue-sonner'
 
-import { useAuthStore } from '../../stores/auth'
-
-const authStore = useAuthStore()
+import { API_SERVER_URL, authClient } from '../../stores/auth'
 
 async function signIn(provider: 'google' | 'github') {
   try {
-    await authStore.signInSocial(provider)
+    await authClient.signIn.social({
+      provider,
+      callbackURL: `${API_SERVER_URL}/api/auth/callback/${provider}`,
+    })
   }
   catch (error) {
     toast.error(error instanceof Error ? error.message : 'An unknown error occurred')
@@ -22,11 +23,11 @@ async function signIn(provider: 'google' | 'github') {
       Sign in to AIRI Stage
     </div>
     <div class="max-w-xs w-full flex flex-col gap-3">
-      <Button :class="['w-full', 'py-2', 'flex', 'items-center', 'justify-center']" icon="mdi:google" @click="signIn('google')">
+      <Button :class="['w-full', 'py-2', 'flex', 'items-center', 'justify-center']" @click="signIn('google')">
         <div class="i-simple-icons-google" />
         <span>Google</span>
       </Button>
-      <Button :class="['w-full', 'py-2', 'flex', 'items-center', 'justify-center']" icon="mdi:github" @click="signIn('github')">
+      <Button :class="['w-full', 'py-2', 'flex', 'items-center', 'justify-center']" @click="signIn('github')">
         <div class="i-simple-icons-github" />
         <span>GitHub</span>
       </Button>
