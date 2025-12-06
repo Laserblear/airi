@@ -1,8 +1,12 @@
 <script setup lang="ts">
 import { Button } from '@proj-airi/ui'
+import { onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { toast } from 'vue-sonner'
 
-import { authClient } from '../../stores/auth'
+import { authClient, fetchSession } from '../../composables/auth'
+
+const router = useRouter()
 
 async function signIn(provider: 'google' | 'github') {
   try {
@@ -17,6 +21,16 @@ async function signIn(provider: 'google' | 'github') {
     toast.error(error instanceof Error ? error.message : 'An unknown error occurred')
   }
 }
+
+onMounted(() => {
+  fetchSession()
+    .then((authenticated) => {
+      if (authenticated) {
+        router.replace('/')
+      }
+    })
+    .catch(() => {})
+})
 </script>
 
 <template>
