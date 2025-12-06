@@ -2,14 +2,16 @@
 import { Button } from '@proj-airi/ui'
 import { toast } from 'vue-sonner'
 
-import { API_SERVER_URL, authClient } from '../../stores/auth'
+import { authClient } from '../../stores/auth'
 
 async function signIn(provider: 'google' | 'github') {
   try {
     await authClient.signIn.social({
       provider,
-      callbackURL: `${API_SERVER_URL}/api/auth/callback/${provider}`,
+      callbackURL: window.location.origin,
     })
+
+    toast.success('Sign in successful')
   }
   catch (error) {
     toast.error(error instanceof Error ? error.message : 'An unknown error occurred')
