@@ -52,14 +52,14 @@ watch(() => memoryEmbedProviderId.value, async (providerId) => {
 function handleClearSessionMemories() {
   // eslint-disable-next-line no-alert
   if (confirm(t('settings.memory.storage.clear-confirmation'))) {
-    memoryStore.clearMemories()
+    memoryStore.clearMemories(chatStore.activeSessionId)
   }
 }
 
 function handleClearAllMemories() {
   // eslint-disable-next-line no-alert
   if (confirm(t('settings.memory.storage.clear-confirmation'))) {
-    memoryStore.clearMemories()
+    memoryStore.clearMemories() // Clear all memories without session filter
   }
 }
 </script>

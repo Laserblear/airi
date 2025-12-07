@@ -137,27 +137,33 @@ export function useMemoryIntegration() {
    */
   function setupAutomaticMemoryStorage() {
     // Store assistant responses as memories
-    chatStore.onAssistantResponseEnd(async (_message) => {
+    chatStore.onAssistantResponseEnd(async (message) => {
       if (!memoryStore.memoryEnabled) {
         return
       }
 
-      const lastMessage = chatStore.messages[chatStore.messages.length - 1]
-      if (lastMessage && lastMessage.role === 'assistant') {
-        await storeMessageAsMemory(lastMessage, chatStore.activeSessionId)
-      }
+      // Use the message content directly from the hook parameter
+      await memoryStore.storeMemory(message, {
+        source: 'chat',
+        importance: message.length > 100 ? 0.7 : 0.5,
+        tags: ['assistant'],
+        sessionId: chatStore.activeSessionId,
+      })
     })
 
     // Store user messages as memories
-    chatStore.onAfterSend(async (_message) => {
+    chatStore.onAfterSend(async (message) => {
       if (!memoryStore.memoryEnabled) {
         return
       }
 
-      const lastMessage = chatStore.messages[chatStore.messages.length - 1]
-      if (lastMessage && lastMessage.role === 'user') {
-        await storeMessageAsMemory(lastMessage, chatStore.activeSessionId)
-      }
+      // Use the message content directly from the hook parameter
+      await memoryStore.storeMemory(message, {
+        source: 'chat',
+        importance: 0.6, // User messages are typically important
+        tags: ['user'],
+        sessionId: chatStore.activeSessionId,
+      })
     })
   }
 
@@ -177,10 +183,12 @@ export function useMemoryIntegration() {
     return `\n\n--- Relevant Memories ---\n${memoryTexts.join('\n\n')}\n--- End of Memories ---\n\n`
   }
 
-  // Auto-setup when memory is enabled
+  // Auto-setup when memory is enabled (only once)
+  let hooksSetup = false
   watchEffect(() => {
-    if (memoryStore.memoryEnabled) {
+    if (memoryStore.memoryEnabled && !hooksSetup) {
       setupAutomaticMemoryStorage()
+      hooksSetup = true
     }
   })
 

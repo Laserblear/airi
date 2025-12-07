@@ -46,6 +46,33 @@ export const useMemoryStore = defineStore('memory', () => {
   })
 
   /**
+   * Generate embedding for text using configured provider
+   */
+  async function generateEmbedding(text: string): Promise<number[] | undefined> {
+    if (!memoryEmbedProviderId.value || !memoryEmbedModel.value) {
+      return undefined
+    }
+
+    try {
+      const embedProvider = await providersStore.getProviderInstance<EmbedProvider>(memoryEmbedProviderId.value)
+      const embedResult = embedProvider.embed(memoryEmbedModel.value)
+
+      if (embedResult && typeof embedResult === 'object' && 'generate' in embedResult) {
+        const result = await (embedResult as any).generate({ input: text })
+
+        if (result && result.data && result.data.length > 0) {
+          return result.data[0].embedding
+        }
+      }
+    }
+    catch (error) {
+      console.error('Failed to generate embedding:', error)
+    }
+
+    return undefined
+  }
+
+  /**
    * Store a memory entry
    */
   async function storeMemory(
@@ -76,24 +103,8 @@ export const useMemoryStore = defineStore('memory', () => {
       sessionId: metadata.sessionId,
     }
 
-    // Generate embedding if embed provider is configured
-    if (memoryEmbedProviderId.value && memoryEmbedModel.value) {
-      try {
-        const embedProvider = await providersStore.getProviderInstance<EmbedProvider>(memoryEmbedProviderId.value)
-        const embedResult = embedProvider.embed(memoryEmbedModel.value)
-
-        if (embedResult && typeof embedResult === 'object' && 'generate' in embedResult) {
-          const result = await (embedResult as any).generate({ input: content })
-
-          if (result && result.data && result.data.length > 0) {
-            entry.embedding = result.data[0].embedding
-          }
-        }
-      }
-      catch (error) {
-        console.error('Failed to generate embedding for memory:', error)
-      }
-    }
+    // Generate embedding using helper function
+    entry.embedding = await generateEmbedding(content)
 
     memories.value.push(entry)
 
@@ -111,21 +122,12 @@ export const useMemoryStore = defineStore('memory', () => {
     const { query, limit = 5, threshold = 0.7, sessionId } = options
 
     try {
-      // Generate query embedding
-      const embedProvider = await providersStore.getProviderInstance<EmbedProvider>(memoryEmbedProviderId.value)
-      const embedResult = embedProvider.embed(memoryEmbedModel.value)
+      // Generate query embedding using helper function
+      const queryEmbedding = await generateEmbedding(query)
 
-      if (!embedResult || typeof embedResult !== 'object' || !('generate' in embedResult)) {
+      if (!queryEmbedding) {
         return []
       }
-
-      const result = await (embedResult as any).generate({ input: query })
-
-      if (!result || !result.data || result.data.length === 0) {
-        return []
-      }
-
-      const queryEmbedding = result.data[0].embedding
 
       // Filter by session if provided
       let filteredMemories = memories.value
