@@ -1,5 +1,7 @@
 import type { ChatMessage } from '../types/chat'
+
 import { watchEffect } from 'vue'
+
 import { useChatStore } from '../stores/chat'
 import { useMemoryStore } from '../stores/memory'
 
@@ -18,14 +20,14 @@ export function useMemoryIntegration() {
     if (typeof message.content === 'string') {
       return message.content
     }
-    
+
     if (Array.isArray(message.content)) {
       return message.content
         .filter(part => part.type === 'text')
         .map(part => (part as any).text || '')
         .join(' ')
     }
-    
+
     return ''
   }
 
@@ -34,22 +36,22 @@ export function useMemoryIntegration() {
    */
   function shouldStoreMessage(message: ChatMessage): boolean {
     const text = extractTextFromMessage(message)
-    
+
     // Skip empty messages
     if (!text.trim()) {
       return false
     }
-    
+
     // Skip very short messages (less than 10 characters)
     if (text.length < 10) {
       return false
     }
-    
+
     // Skip system messages
     if (message.role === 'system') {
       return false
     }
-    
+
     return true
   }
 
@@ -59,7 +61,7 @@ export function useMemoryIntegration() {
   function calculateImportance(message: ChatMessage): number {
     const text = extractTextFromMessage(message)
     let score = 0.5 // Base score
-    
+
     // Longer messages are typically more important
     if (text.length > 100) {
       score += 0.1
@@ -67,17 +69,17 @@ export function useMemoryIntegration() {
     if (text.length > 500) {
       score += 0.1
     }
-    
+
     // Messages with questions are important
     if (text.includes('?')) {
       score += 0.1
     }
-    
+
     // Messages from user are generally important
     if (message.role === 'user') {
       score += 0.1
     }
-    
+
     // Cap at 1.0
     return Math.min(score, 1.0)
   }
@@ -92,7 +94,7 @@ export function useMemoryIntegration() {
 
     const text = extractTextFromMessage(message)
     const importance = calculateImportance(message)
-    
+
     try {
       await memoryStore.storeMemory(text, {
         source: 'chat',
@@ -121,7 +123,7 @@ export function useMemoryIntegration() {
         threshold: 0.7,
         sessionId,
       })
-      
+
       return results
     }
     catch (error) {
@@ -135,7 +137,7 @@ export function useMemoryIntegration() {
    */
   function setupAutomaticMemoryStorage() {
     // Store assistant responses as memories
-    chatStore.onAssistantResponseEnd(async (message) => {
+    chatStore.onAssistantResponseEnd(async (_message) => {
       if (!memoryStore.memoryEnabled) {
         return
       }
@@ -147,7 +149,7 @@ export function useMemoryIntegration() {
     })
 
     // Store user messages as memories
-    chatStore.onAfterSend(async (message) => {
+    chatStore.onAfterSend(async (_message) => {
       if (!memoryStore.memoryEnabled) {
         return
       }

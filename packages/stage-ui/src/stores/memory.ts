@@ -1,7 +1,9 @@
 import type { EmbedProvider } from '@xsai-ext/shared-providers'
+
 import { useLocalStorage } from '@vueuse/core'
 import { defineStore } from 'pinia'
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
+
 import { useProvidersStore } from './providers'
 
 export interface MemoryEntry {
@@ -31,14 +33,14 @@ export interface MemorySearchResult {
 
 export const useMemoryStore = defineStore('memory', () => {
   const providersStore = useProvidersStore()
-  
+
   const memories = useLocalStorage<MemoryEntry[]>('memory/entries', [])
   const memoryEnabled = useLocalStorage<boolean>('memory/enabled', false)
   const memoryProviderId = useLocalStorage<string>('memory/provider', '')
   const memoryEmbedProviderId = useLocalStorage<string>('memory/embed-provider', '')
   const memoryModel = useLocalStorage<string>('memory/model', '')
   const memoryEmbedModel = useLocalStorage<string>('memory/embed-model', '')
-  
+
   const isConfigured = computed(() => {
     return memoryEnabled.value && memoryEmbedProviderId.value && memoryEmbedModel.value
   })
@@ -46,14 +48,22 @@ export const useMemoryStore = defineStore('memory', () => {
   /**
    * Store a memory entry
    */
-  async function storeMemory(content: string, metadata: Partial<MemoryEntry['metadata']> = {}) {
+  async function storeMemory(
+    content: string,
+    metadata: {
+      source?: string
+      importance?: number
+      tags?: string[]
+      sessionId?: string
+    } = {},
+  ) {
     if (!isConfigured.value) {
       console.warn('Memory system not configured')
       return
     }
 
     const id = `mem_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`
-    
+
     const entry: MemoryEntry = {
       id,
       content,
@@ -63,17 +73,21 @@ export const useMemoryStore = defineStore('memory', () => {
         importance: metadata.importance,
         tags: metadata.tags,
       },
-      sessionId: metadata.sessionId as string | undefined,
+      sessionId: metadata.sessionId,
     }
 
     // Generate embedding if embed provider is configured
     if (memoryEmbedProviderId.value && memoryEmbedModel.value) {
       try {
         const embedProvider = await providersStore.getProviderInstance<EmbedProvider>(memoryEmbedProviderId.value)
-        const result = await embedProvider.embed(memoryEmbedModel.value).generate({ input: content })
-        
-        if (result && result.data && result.data.length > 0) {
-          entry.embedding = result.data[0].embedding
+        const embedResult = embedProvider.embed(memoryEmbedModel.value)
+
+        if (embedResult && typeof embedResult === 'object' && 'generate' in embedResult) {
+          const result = await (embedResult as any).generate({ input: content })
+
+          if (result && result.data && result.data.length > 0) {
+            entry.embedding = result.data[0].embedding
+          }
         }
       }
       catch (error) {
@@ -82,7 +96,7 @@ export const useMemoryStore = defineStore('memory', () => {
     }
 
     memories.value.push(entry)
-    
+
     return entry
   }
 
@@ -99,8 +113,14 @@ export const useMemoryStore = defineStore('memory', () => {
     try {
       // Generate query embedding
       const embedProvider = await providersStore.getProviderInstance<EmbedProvider>(memoryEmbedProviderId.value)
-      const result = await embedProvider.embed(memoryEmbedModel.value).generate({ input: query })
-      
+      const embedResult = embedProvider.embed(memoryEmbedModel.value)
+
+      if (!embedResult || typeof embedResult !== 'object' || !('generate' in embedResult)) {
+        return []
+      }
+
+      const result = await (embedResult as any).generate({ input: query })
+
       if (!result || !result.data || result.data.length === 0) {
         return []
       }

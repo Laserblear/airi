@@ -23,10 +23,6 @@ const embedProviders = computed(() => {
   return providersStore.allProvidersMetadata.filter(p => p.category === 'embed')
 })
 
-const selectedEmbedProvider = computed(() => {
-  return embedProviders.value.find(p => p.id === memoryEmbedProviderId.value)
-})
-
 // Get models for selected embed provider
 const embedModels = ref<any[]>([])
 const loadingModels = ref(false)
@@ -54,12 +50,14 @@ watch(() => memoryEmbedProviderId.value, async (providerId) => {
 }, { immediate: true })
 
 function handleClearSessionMemories() {
+  // eslint-disable-next-line no-alert
   if (confirm(t('settings.memory.storage.clear-confirmation'))) {
     memoryStore.clearMemories()
   }
 }
 
 function handleClearAllMemories() {
+  // eslint-disable-next-line no-alert
   if (confirm(t('settings.memory.storage.clear-confirmation'))) {
     memoryStore.clearMemories()
   }
@@ -67,9 +65,9 @@ function handleClearAllMemories() {
 </script>
 
 <template>
-  <div class="max-w-4xl mx-auto space-y-6 p-4">
+  <div class="mx-auto max-w-4xl p-4 space-y-6">
     <div>
-      <h1 class="text-2xl font-bold mb-2">
+      <h1 class="mb-2 text-2xl font-bold">
         {{ t('settings.memory.title') }}
       </h1>
       <p class="text-neutral-600 dark:text-neutral-400">
@@ -85,7 +83,7 @@ function handleClearAllMemories() {
             <FormControl>
               <label class="font-medium">{{ t('settings.memory.enable.title') }}</label>
             </FormControl>
-            <p class="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
+            <p class="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
               {{ t('settings.memory.enable.description') }}
             </p>
           </div>
@@ -105,7 +103,7 @@ function handleClearAllMemories() {
         <FormControl>
           <label class="font-medium">{{ t('settings.memory.embed-provider.title') }}</label>
         </FormControl>
-        <p class="text-sm text-neutral-600 dark:text-neutral-400 mb-2">
+        <p class="mb-2 text-sm text-neutral-600 dark:text-neutral-400">
           {{ t('settings.memory.embed-provider.description') }}
         </p>
         <Select v-model="memoryEmbedProviderId">
@@ -129,7 +127,7 @@ function handleClearAllMemories() {
         <FormControl>
           <label class="font-medium">{{ t('settings.memory.embed-model.title') }}</label>
         </FormControl>
-        <p class="text-sm text-neutral-600 dark:text-neutral-400 mb-2">
+        <p class="mb-2 text-sm text-neutral-600 dark:text-neutral-400">
           {{ t('settings.memory.embed-model.description') }}
         </p>
         <Select v-model="memoryEmbedModel" :disabled="loadingModels || embedModels.length === 0">
