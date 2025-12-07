@@ -739,6 +739,35 @@ vrm:
   skybox:
     skybox-intensity: SkyBox Intensity
     skybox-specular-mix: Specular Mix
+memory:
+  title: Memory System
+  description: Configure the memory system to help AIRI remember conversations and provide contextual responses
+  enable:
+    title: Enable Memory
+    description: Allow AIRI to store and retrieve conversation memories
+  provider:
+    title: Memory Provider
+    description: Select the provider to use for memory storage
+  embed-provider:
+    title: Embedding Provider
+    description: Select the provider to use for generating embeddings for semantic search
+  model:
+    title: Model
+    description: Select the model to use for memory operations
+  embed-model:
+    title: Embedding Model
+    description: Select the model to use for generating embeddings
+  storage:
+    title: Storage
+    current-count: 'Current memories: {count}'
+    clear-session: Clear Session Memories
+    clear-all: Clear All Memories
+    clear-confirmation: Are you sure you want to clear memories?
+  search:
+    title: Search Memories
+    placeholder: Search for memories...
+    no-results: No memories found
+    result-similarity: 'Similarity: {similarity}'
 wip:
   title: Work in Progress
   description: This feature is currently under development and not yet publicly available. Check back in future updates for this functionality.
