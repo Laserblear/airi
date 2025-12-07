@@ -2,9 +2,12 @@
 import { storeToRefs } from 'pinia'
 import { computed, ref } from 'vue'
 import { RouterLink } from 'vue-router'
+import { toast } from 'vue-sonner'
 
 import HeaderLink from './HeaderLink.vue'
 
+import { doRequest } from '../../composables/api'
+import { authClient, listSessions } from '../../composables/auth'
 import { useAuthStore } from '../../stores/auth'
 
 const authStore = useAuthStore()
@@ -13,6 +16,20 @@ const { isAuthenticated, user } = storeToRefs(authStore)
 const userName = computed(() => user.value?.name)
 const userAvatar = computed(() => user.value?.image)
 const showDropdown = ref(false)
+
+function handleLogout() {
+  authClient.signOut()
+}
+
+function handleListSessions() {
+  doRequest('/session')
+    .then((response) => {
+      console.log(response)
+    })
+    .catch((error) => {
+      toast.error(error instanceof Error ? error.message : 'An unknown error occurred')
+    })
+}
 </script>
 
 <template>
@@ -52,19 +69,18 @@ const showDropdown = ref(false)
         class="absolute right-0 top-full z-10 mt-2 min-w-[140px] flex flex-col rounded-lg bg-white shadow-lg dark:bg-neutral-900"
       >
         <span v-if="userName" class="rounded-lg p-2 text-sm text-neutral-700 dark:text-neutral-200">{{ userName }}</span>
-        <RouterLink
-          to="/settings"
-          class="block rounded-lg p-2 text-neutral-600 transition hover:bg-neutral-100 dark:text-neutral-100 dark:hover:bg-neutral-800"
-          @click="showDropdown = false"
-        >
-          <div class="i-solar:settings-minimalistic-bold-duotone mr-2 inline-block" />
-          设置
-        </RouterLink>
         <button
           class="block w-full rounded-lg p-2 text-left text-neutral-600 transition hover:bg-neutral-100 dark:text-neutral-100 dark:hover:bg-neutral-800"
+          @click="handleListSessions"
+        >
+          List Sessions
+        </button>
+        <button
+          class="block w-full rounded-lg p-2 text-left text-neutral-600 transition hover:bg-neutral-100 dark:text-neutral-100 dark:hover:bg-neutral-800"
+          @click="handleLogout"
         >
           <div class="i-solar:logout-3-bold-duotone mr-2 inline-block" />
-          退出登录
+          Logout
         </button>
       </div>
     </div>
